@@ -24,9 +24,64 @@ impl<'a> Scanner<'a> {
     }
 
     pub fn scan_tokens(&mut self) -> &Vec<Token> {
-        while !self.at_end() {
+        while let Some(c) = self.advance() {
             self.start_pos = self.current_pos;
-            self.scan_token();
+            match c {
+                '(' => self.add_token(TokenType::LeftParen),
+                ')' => self.add_token(TokenType::RightParen),
+                '{' => self.add_token(TokenType::LeftBrace),
+                '}' => self.add_token(TokenType::RightBrace),
+                ',' => self.add_token(TokenType::Comma),
+                '.' => self.add_token(TokenType::Dot),
+                '-' => self.add_token(TokenType::Minus),
+                '+' => self.add_token(TokenType::Plus),
+                ';' => self.add_token(TokenType::Semicolon),
+                '*' => self.add_token(TokenType::Star),
+                '!' => {
+                    if self.match_char('=') {
+                        self.add_token(TokenType::BangEqual);
+                    } else {
+                        self.add_token(TokenType::Bang);
+                    }
+                },
+                '=' => {
+                    if self.match_char('=') {
+                        self.add_token(TokenType::EqualEqual);
+                    } else {
+                        self.add_token(TokenType::Equal);
+                    }
+                },
+                '<' => {
+                    if self.match_char('=') {
+                        self.add_token(TokenType::LessEqual);
+                    } else {
+                        self.add_token(TokenType::Less);
+                    }
+                },
+                '>' => {
+                    if self.match_char('=') {
+                        self.add_token(TokenType::GreaterEqual);
+                    } else {
+                        self.add_token(TokenType::Greater);
+                    }
+                },
+                '/' => {
+                    if self.match_char('/') {
+                        // we found two forward slashes, consume until end of line
+                        while let Some(c) = self.peek() {
+                            if *c != '\n' {
+                                self.advance();
+                            }
+                        }
+                    } else {
+                        self.add_token(TokenType::Slash);
+                    }
+                },
+                ' ' | '\r' | '\t' => (),
+                '\n' => self.line += 1,
+                //'"' => self.is_string(),
+                _ => self.add_token(TokenType::Error),
+            }
         }
 
         self.tokens.push(Token::new(
@@ -44,6 +99,20 @@ impl<'a> Scanner<'a> {
     fn advance(&mut self) -> Option<char> {
         self.current_pos += 1;
         self.source.next()
+    }
+
+    fn match_char(&mut self, expected: char) -> bool {
+        if let Some(c) = self.source.peek() {
+            if *c == expected {
+                self.advance();
+                return true
+            }
+        }
+        false
+    }
+
+    fn peek(&mut self) -> Option<&char> {
+        self.source.peek()
     }
 
     fn scan_token(&mut self) {

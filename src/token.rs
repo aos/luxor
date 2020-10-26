@@ -17,7 +17,10 @@ pub enum TokenType {
     And, Class, Else, False, Fun, For, If, Nil, Or,
     Print, Return, Super, This, True, Var, While,
 
-    EOF
+    EOF,
+
+    // Error
+    Error,
 }
 
 #[derive(Debug)]
@@ -29,12 +32,19 @@ pub enum LiteralKind {
 
 #[derive(Debug)]
 pub struct Token {
-    kind: TokenType,
-    line: u32,
+    pub kind: TokenType,
+    pub line: u32,
 }
 
 impl Token {
     pub fn new(kind: TokenType, line: u32) -> Token {
         Token { kind, line }
+    }
+
+    pub fn is_unknown(&self) -> bool {
+        match self.kind {
+            TokenType::Error => true,
+            _ => false,
+        }
     }
 }

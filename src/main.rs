@@ -31,42 +31,48 @@ impl Luxor {
         Default::default()
     }
 
-    fn run_file(&self, f: &str) -> Result<(), io::Error>  {
+    fn run_file(&mut self, f: &str) -> Result<(), io::Error>  {
         let src = fs::read_to_string(f)?;
         self.run(&src);
         Ok(())
     }
 
     fn run_prompt(&mut self) -> Result<(), io::Error> {
+        let mut input = String::new();
+
         loop {
             print!("> ");
             let _ = io::stdout().flush();
 
-            let mut input = String::new();
             match io::stdin().read_line(&mut input) {
                 Ok(n) => {
                     if n == 0 {
                         // EOF
                         return Ok(())
                     } else {
-                        self.run(&input);
-                        self.had_error = false;
+                        self.run(&input.trim());
                     };
                 }
-                Err(error) => {
-                    return Err(error)
+                Err(e) => {
+                    return Err(e)
                 }
             }
+
+            input.clear();
         }
     }
 
     // Scanner here
-    fn run(&self, src: &str) {
+    fn run(&mut self, src: &str) {
         let mut sc = Scanner::new(src);
         let tokens = sc.scan_tokens();
 
         for t in tokens {
-            println!("{:?}", t);
+            if t.is_unknown() {
+                self.error(t.line, "Unexpected character.");
+            } else {
+                println!("{:?}", t);
+            }
         }
     }
 
