@@ -79,8 +79,9 @@ impl<'a> Scanner<'a> {
                 },
                 ' ' | '\r' | '\t' => (),
                 '\n' => self.line += 1,
-                //'"' => self.is_string(),
-                _ => self.add_token(TokenType::Error),
+                '"' => self.read_string(),
+                '0'..='9' => self.read_number(c),
+                _ => self.add_token(TokenType::Error("Unrecognized token".to_string())),
             }
         }
 
@@ -92,17 +93,13 @@ impl<'a> Scanner<'a> {
         &self.tokens
     }
 
-    fn at_end(&self) -> bool {
-        self.current_pos >= self.total_len
-    }
-
     fn advance(&mut self) -> Option<char> {
         self.current_pos += 1;
         self.source.next()
     }
 
     fn match_char(&mut self, expected: char) -> bool {
-        if let Some(c) = self.source.peek() {
+        if let Some(c) = self.peek() {
             if *c == expected {
                 self.advance();
                 return true
@@ -115,22 +112,36 @@ impl<'a> Scanner<'a> {
         self.source.peek()
     }
 
-    fn scan_token(&mut self) {
-        if let Some(c) = self.advance() {
-            match c {
-                '(' => self.add_token(TokenType::LeftParen),
-                ')' => self.add_token(TokenType::RightParen),
-                '{' => self.add_token(TokenType::LeftBrace),
-                '}' => self.add_token(TokenType::RightBrace),
-                ',' => self.add_token(TokenType::Comma),
-                '.' => self.add_token(TokenType::Dot),
-                '-' => self.add_token(TokenType::Minus),
-                '+' => self.add_token(TokenType::Plus),
-                ';' => self.add_token(TokenType::Semicolon),
-                '*' => self.add_token(TokenType::Star),
-                _ => println!("{}", c)
+    fn read_string(&mut self) {
+        let mut s = String::new();
+
+        loop {
+            match self.peek() {
+                Some(c) => {
+                    if *c == '"' {
+                        break;
+                    }
+
+                    s.push(*c);
+                    if *c == '\n' {
+                        self.line += 1;
+                    }
+
+                    self.advance();
+                },
+                None => {
+                    self.add_token(TokenType::Error("Unterminated string".to_string()));
+                    return
+                }
             }
         }
+
+        self.advance();
+        self.add_token(TokenType::Literal(LiteralKind::Str(s)));
+    }
+
+    fn read_number(&mut self, n: char) {
+        let num = n.to_string();
     }
 
     fn add_token(&mut self, t: TokenType) {

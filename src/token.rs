@@ -20,7 +20,7 @@ pub enum TokenType {
     EOF,
 
     // Error
-    Error,
+    Error(String),
 }
 
 #[derive(Debug)]
@@ -41,9 +41,9 @@ impl Token {
         Token { kind, line }
     }
 
-    pub fn is_unknown(&self) -> bool {
+    pub fn is_error(&self) -> bool {
         match self.kind {
-            TokenType::Error => true,
+            TokenType::Error(_) => true,
             _ => false,
         }
     }

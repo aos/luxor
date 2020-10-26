@@ -68,8 +68,10 @@ impl Luxor {
         let tokens = sc.scan_tokens();
 
         for t in tokens {
-            if t.is_unknown() {
-                self.error(t.line, "Unexpected character.");
+            if t.is_error() {
+                if let token::TokenType::Error(err) = &t.kind {
+                    self.error(t.line, &err);
+                }
             } else {
                 println!("{:?}", t);
             }
