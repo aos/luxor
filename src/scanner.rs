@@ -112,9 +112,18 @@ impl<'a> Scanner<'a> {
         self.source.peek()
     }
 
+    fn peek_next(&mut self) -> Option<char> {
+        let mut iter_dup = self.source.clone();
+        if let Some(_) = iter_dup.next() {
+            iter_dup.next()
+        } else {
+            None
+        }
+
+    }
+
     fn read_string(&mut self) {
         let mut s = String::new();
-
         loop {
             match self.peek() {
                 Some(c) => {
@@ -141,7 +150,41 @@ impl<'a> Scanner<'a> {
     }
 
     fn read_number(&mut self, n: char) {
-        let num = n.to_string();
+        let mut num = n.to_string();
+        loop {
+            match self.peek() {
+                Some(c) => {
+                    if c.is_digit(10) {
+                        num.push(c.clone());
+                        self.advance();
+                    } else if *c == '.' {
+                        if let Some(cn) = self.peek_next() {
+                            if cn.is_digit(10) {
+                                num.push('.');
+                                self.advance();
+                            }
+                            break;
+                        }
+                    }
+                },
+                None => break
+            }
+        }
+
+        loop {
+            match self.peek() {
+                Some(c) if c.is_digit(10) => {
+                    num.push(c.clone());
+                    self.advance();
+                },
+                Some(_) => break,
+                None => break,
+            }
+        }
+
+        if let Ok(f) = num.parse::<f64>() {
+            self.add_token(TokenType::Literal(LiteralKind::Number(f)));
+        }
     }
 
     fn add_token(&mut self, t: TokenType) {
