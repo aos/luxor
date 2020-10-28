@@ -81,6 +81,7 @@ impl<'a> Scanner<'a> {
                 '\n' => self.line += 1,
                 '"' => self.read_string(),
                 '0'..='9' => self.read_number(c),
+                'A'..='Z' | 'a'..='z' | '_' => self.read_identifier(c),
                 _ => self.add_token(TokenType::Error("Unrecognized token".to_string())),
             }
         }
@@ -189,10 +190,55 @@ impl<'a> Scanner<'a> {
         }
     }
 
+    fn read_identifier(&mut self, c: char) {
+        let mut s = String::from(c);
+        while let Some(chr) = self.peek() {
+            match *chr {
+                y if Self::is_alphanumeric(y) => {
+                    s.push(y);
+                    self.advance();
+                },
+                _ => break,
+            }
+        }
+
+        self.add_token(Self::lookup_ident(s));
+    }
+
     fn add_token(&mut self, t: TokenType) {
         self.tokens.push(Token::new(t, self.line));
     }
+
+    fn is_alphanumeric(c: char) -> bool {
+        match c {
+            '0'..='9' | 'A'..='Z' | 'a'..='z' | '_' => true,
+            _ => false,
+        }
+    }
+
+    fn lookup_ident(s: String) -> TokenType {
+        match s.as_str() {
+            "and" => TokenType::And,
+            "class" => TokenType::Class,
+            "else" => TokenType::Else,
+            "false" => TokenType::False,
+            "for" => TokenType::For,
+            "fun" => TokenType::Fun,
+            "if" => TokenType::If,
+            "nil" => TokenType::Nil,
+            "or" => TokenType::Or,
+            "print" => TokenType::Print,
+            "return" => TokenType::Return,
+            "super"  => TokenType::Super,
+            "this"  => TokenType::This,
+            "true" => TokenType::True,
+            "var" => TokenType::Var,
+            "while" => TokenType::While,
+            _ => TokenType::Literal(LiteralKind::Identifier(s)),
+        }
+    }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -267,6 +313,43 @@ partner""#;
             Token::new(TokenType::Literal(LiteralKind::Str("string here".to_string())), 1),
             Token::new(TokenType::BangEqual, 1),
             Token::new(TokenType::Literal(LiteralKind::Number(56.0)), 1),
+            Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_reserved_words() {
+        let s = r#"if 3 and 5 or "hello" else nil"#;
+        let mut sc = Scanner::new(s);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::If, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(3.0)), 1),
+            Token::new(TokenType::And, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(5.0)), 1),
+            Token::new(TokenType::Or, 1),
+            Token::new(TokenType::Literal(LiteralKind::Str("hello".to_string())), 1),
+            Token::new(TokenType::Else, 1),
+            Token::new(TokenType::Nil, 1),
+            Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_statement() {
+        let s = "var x = 3.5 + 1;";
+        let mut sc = Scanner::new(s);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::Var, 1),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("x".to_string())), 1),
+            Token::new(TokenType::Equal, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(3.5)), 1),
+            Token::new(TokenType::Plus, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(1.0)), 1),
+            Token::new(TokenType::Semicolon, 1),
             Token::new(TokenType::EOF, 1),
         ];
         assert_eq!(tokens, &expected);
