@@ -227,7 +227,6 @@ impl<'a> Scanner<'a> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -339,6 +338,84 @@ partner""#;
             Token::new(TokenType::Literal(LiteralKind::Number(1.0)), 1),
             Token::new(TokenType::Semicolon, 1),
             Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_small_program() {
+        let input = "var three = 3;
+var x = 8;
+
+var add = fun(i, j) {
+    return i + j;
+}
+
+var result = add(three, x);
+
+if (3 < 8) {
+    return true;
+} else {
+    return false;
+};";
+        let mut sc = Scanner::new(input);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::Var, 1),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("three".to_string())), 1),
+            Token::new(TokenType::Equal, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(3.0)), 1),
+            Token::new(TokenType::Semicolon, 1),
+            Token::new(TokenType::Var, 2),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("x".to_string())), 2),
+            Token::new(TokenType::Equal, 2),
+            Token::new(TokenType::Literal(LiteralKind::Number(8.0)), 2),
+            Token::new(TokenType::Semicolon, 2),
+            Token::new(TokenType::Var, 4),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("add".to_string())), 4),
+            Token::new(TokenType::Equal, 4),
+            Token::new(TokenType::Fun, 4),
+            Token::new(TokenType::LeftParen, 4),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("i".to_string())), 4),
+            Token::new(TokenType::Comma, 4),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("j".to_string())), 4),
+            Token::new(TokenType::RightParen, 4),
+            Token::new(TokenType::LeftBrace, 4),
+            Token::new(TokenType::Return, 5),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("i".to_string())), 5),
+            Token::new(TokenType::Plus, 5),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("j".to_string())), 5),
+            Token::new(TokenType::Semicolon, 5),
+            Token::new(TokenType::RightBrace, 6),
+            Token::new(TokenType::Var, 8),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("result".to_string())), 8),
+            Token::new(TokenType::Equal, 8),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("add".to_string())), 8),
+            Token::new(TokenType::LeftParen, 8),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("three".to_string())), 8),
+            Token::new(TokenType::Comma, 8),
+            Token::new(TokenType::Literal(LiteralKind::Identifier("x".to_string())), 8),
+            Token::new(TokenType::RightParen, 8),
+            Token::new(TokenType::Semicolon, 8),
+            Token::new(TokenType::If, 10),
+            Token::new(TokenType::LeftParen, 10),
+            Token::new(TokenType::Literal(LiteralKind::Number(3.0)), 10),
+            Token::new(TokenType::Less, 10),
+            Token::new(TokenType::Literal(LiteralKind::Number(8.0)), 10),
+            Token::new(TokenType::RightParen, 10),
+            Token::new(TokenType::LeftBrace, 10),
+            Token::new(TokenType::Return, 11),
+            Token::new(TokenType::True, 11),
+            Token::new(TokenType::Semicolon, 11),
+            Token::new(TokenType::RightBrace, 12),
+            Token::new(TokenType::Else, 12),
+            Token::new(TokenType::LeftBrace, 12),
+            Token::new(TokenType::Return, 13),
+            Token::new(TokenType::False, 13),
+            Token::new(TokenType::Semicolon, 13),
+            Token::new(TokenType::RightBrace, 14),
+            Token::new(TokenType::Semicolon, 14),
+            Token::new(TokenType::EOF, 14),
         ];
         assert_eq!(tokens, &expected);
     }
