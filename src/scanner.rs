@@ -125,64 +125,55 @@ impl<'a> Scanner<'a> {
 
     fn read_string(&mut self) {
         let mut s = String::new();
-        loop {
-            match self.peek() {
-                Some(c) => {
-                    if *c == '"' {
-                        break;
-                    }
-
+        while let Some(c) = self.peek() {
+            match c {
+                '"' => {
+                    self.advance(); // consume the last `"`
+                    self.add_token(TokenType::Literal(LiteralKind::Str(s)));
+                    return
+                },
+                _ => {
                     s.push(*c);
                     if *c == '\n' {
                         self.line += 1;
                     }
 
                     self.advance();
-                },
-                None => {
-                    self.add_token(TokenType::Error("Unterminated string".to_string()));
-                    return
                 }
             }
         }
 
-        self.advance();
-        self.add_token(TokenType::Literal(LiteralKind::Str(s)));
+        self.add_token(TokenType::Error("Unterminated string".to_string()));
     }
 
     fn read_number(&mut self, n: char) {
         let mut num = n.to_string();
-        loop {
-            match self.peek() {
-                Some(c) => {
-                    if c.is_digit(10) {
-                        num.push(*c);
-                        self.advance();
-                    } else if *c == '.' {
-                        if let Some(cn) = self.peek_next() {
-                            if cn.is_digit(10) {
-                                num.push('.');
-                                self.advance();
-                            }
-                            break;
+        while let Some(c) = self.peek() {
+            match *c {
+                d if c.is_digit(10) => {
+                    num.push(d);
+                    self.advance();
+                },
+                '.' => {
+                    if let Some(cn) = self.peek_next() {
+                        if cn.is_digit(10) {
+                            num.push('.');
+                            self.advance();
                         }
-                    } else {
                         break;
                     }
                 },
-                None => break
+                _ => break
             }
         }
 
-        loop {
-            match self.peek() {
-                Some(c) if c.is_digit(10) => {
-                    num.push(c.clone());
-                    self.advance();
-                },
-                Some(_) => break,
-                None => break,
-            }
+        while let Some(c) = self.peek() {
+            if !c.is_digit(10) {
+                break;
+            };
+
+            num.push(c.clone());
+            self.advance();
         }
 
         if let Ok(f) = num.parse::<f64>() {
@@ -210,31 +201,28 @@ impl<'a> Scanner<'a> {
     }
 
     fn is_alphanumeric(c: char) -> bool {
-        match c {
-            '0'..='9' | 'A'..='Z' | 'a'..='z' | '_' => true,
-            _ => false,
-        }
+        c.is_ascii_alphanumeric() || c == '_'
     }
 
     fn lookup_ident(s: String) -> TokenType {
         match s.as_str() {
-            "and" => TokenType::And,
-            "class" => TokenType::Class,
-            "else" => TokenType::Else,
-            "false" => TokenType::False,
-            "for" => TokenType::For,
-            "fun" => TokenType::Fun,
-            "if" => TokenType::If,
-            "nil" => TokenType::Nil,
-            "or" => TokenType::Or,
-            "print" => TokenType::Print,
+            "and"    => TokenType::And,
+            "class"  => TokenType::Class,
+            "else"   => TokenType::Else,
+            "false"  => TokenType::False,
+            "for"    => TokenType::For,
+            "fun"    => TokenType::Fun,
+            "if"     => TokenType::If,
+            "nil"    => TokenType::Nil,
+            "or"     => TokenType::Or,
+            "print"  => TokenType::Print,
             "return" => TokenType::Return,
             "super"  => TokenType::Super,
-            "this"  => TokenType::This,
-            "true" => TokenType::True,
-            "var" => TokenType::Var,
-            "while" => TokenType::While,
-            _ => TokenType::Literal(LiteralKind::Identifier(s)),
+            "this"   => TokenType::This,
+            "true"   => TokenType::True,
+            "var"    => TokenType::Var,
+            "while"  => TokenType::While,
+            _        => TokenType::Literal(LiteralKind::Identifier(s)),
         }
     }
 }
