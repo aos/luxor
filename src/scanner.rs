@@ -155,7 +155,7 @@ impl<'a> Scanner<'a> {
             match self.peek() {
                 Some(c) => {
                     if c.is_digit(10) {
-                        num.push(c.clone());
+                        num.push(*c);
                         self.advance();
                     } else if *c == '.' {
                         if let Some(cn) = self.peek_next() {
@@ -165,6 +165,8 @@ impl<'a> Scanner<'a> {
                             }
                             break;
                         }
+                    } else {
+                        break;
                     }
                 },
                 None => break
@@ -189,5 +191,84 @@ impl<'a> Scanner<'a> {
 
     fn add_token(&mut self, t: TokenType) {
         self.tokens.push(Token::new(t, self.line));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_single_decimal() {
+        let num = "123.45";
+        let mut sc = Scanner::new(num);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::Literal(LiteralKind::Number(123.45)), 1),
+            Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_multiple_dots() {
+        let num = "123.45..5.5 3.1 != 6";
+        let mut sc = Scanner::new(num);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::Literal(LiteralKind::Number(123.45)), 1),
+            Token::new(TokenType::Dot, 1),
+            Token::new(TokenType::Dot, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(5.5)), 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(3.1)), 1),
+            Token::new(TokenType::BangEqual, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(6.0)), 1),
+            Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_quoted_string() {
+        let s = r#""howdy
+partner""#;
+        let mut sc = Scanner::new(s);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::Literal(LiteralKind::Str("howdy\npartner".to_string())), 2),
+            Token::new(TokenType::EOF, 2),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_equal_tokens() {
+        let s = "!= <= !! >= ==";
+        let mut sc = Scanner::new(s);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::BangEqual, 1),
+            Token::new(TokenType::LessEqual, 1),
+            Token::new(TokenType::Bang, 1),
+            Token::new(TokenType::Bang, 1),
+            Token::new(TokenType::GreaterEqual, 1),
+            Token::new(TokenType::EqualEqual, 1),
+            Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
+    }
+
+    #[test]
+    fn test_double_slash_comment() {
+        let s = r#""string here" != 56 // Nothing followed"#;
+        let mut sc = Scanner::new(s);
+        let tokens = sc.scan_tokens();
+        let expected = vec![
+            Token::new(TokenType::Literal(LiteralKind::Str("string here".to_string())), 1),
+            Token::new(TokenType::BangEqual, 1),
+            Token::new(TokenType::Literal(LiteralKind::Number(56.0)), 1),
+            Token::new(TokenType::EOF, 1),
+        ];
+        assert_eq!(tokens, &expected);
     }
 }

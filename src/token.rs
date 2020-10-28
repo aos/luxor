@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TokenType {
     // Single character tokens
     LeftParen, RightParen, LeftBrace, RightBrace,
@@ -23,14 +23,14 @@ pub enum TokenType {
     Error(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum LiteralKind {
     Str(String),
     Number(f64),
     Identifier(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Token {
     pub kind: TokenType,
     pub line: u32,
