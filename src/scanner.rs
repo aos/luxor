@@ -43,28 +43,28 @@ impl<'a> Scanner<'a> {
                     } else {
                         self.add_token(TokenType::Bang);
                     }
-                },
+                }
                 '=' => {
                     if self.match_char('=') {
                         self.add_token(TokenType::EqualEqual);
                     } else {
                         self.add_token(TokenType::Equal);
                     }
-                },
+                }
                 '<' => {
                     if self.match_char('=') {
                         self.add_token(TokenType::LessEqual);
                     } else {
                         self.add_token(TokenType::Less);
                     }
-                },
+                }
                 '>' => {
                     if self.match_char('=') {
                         self.add_token(TokenType::GreaterEqual);
                     } else {
                         self.add_token(TokenType::Greater);
                     }
-                },
+                }
                 '/' => {
                     if self.match_char('/') {
                         // we found two forward slashes, consume until end of line
@@ -91,18 +91,22 @@ impl<'a> Scanner<'a> {
                                                 self.advance();
                                                 self.advance();
                                                 break;
-                                            },
-                                            _ => { self.advance(); },
+                                            }
+                                            _ => {
+                                              self.advance();
+                                            }
                                         }
                                     }
-                                },
-                                _ => { self.advance(); }
+                                }
+                                _ => {
+                                  self.advance();
+                                }
                             }
                         }
                     } else {
                         self.add_token(TokenType::Slash);
                     }
-                },
+                }
                 ' ' | '\r' | '\t' => (),
                 '\n' => self.line += 1,
                 '"' => self.read_string(),
@@ -112,10 +116,7 @@ impl<'a> Scanner<'a> {
             }
         }
 
-        self.tokens.push(Token::new(
-            TokenType::EOF,
-            self.line,
-        ));
+        self.tokens.push(Token::new( TokenType::EOF, self.line));
 
         &self.tokens
     }
@@ -157,7 +158,7 @@ impl<'a> Scanner<'a> {
                     self.advance(); // consume the last `"`
                     self.add_token(TokenType::Literal(LiteralKind::Str(s)));
                     return
-                },
+                }
                 _ => {
                     s.push(*c);
                     if *c == '\n' {
@@ -179,16 +180,16 @@ impl<'a> Scanner<'a> {
                 d if c.is_digit(10) => {
                     num.push(d);
                     self.advance();
-                },
+                }
                 '.' => {
                     if let Some(cn) = self.peek_next() {
                         if cn.is_digit(10) {
                             num.push('.');
                             self.advance();
                         }
-                        break;
+                        break
                     }
-                },
+                }
                 _ => break
             }
         }
@@ -214,8 +215,8 @@ impl<'a> Scanner<'a> {
                 y if Self::is_alphanumeric(y) => {
                     s.push(y);
                     self.advance();
-                },
-                _ => break,
+                }
+                _ => break
             }
         }
 

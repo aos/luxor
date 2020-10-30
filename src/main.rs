@@ -1,8 +1,8 @@
-use std::{fs, process};
 use std::io::{self, Write};
+use std::{fs, process};
 
-mod token;
 mod scanner;
+mod token;
 
 use scanner::Scanner;
 
@@ -23,7 +23,7 @@ fn main() {
 
 #[derive(Default)]
 struct Luxor {
-    had_error: bool
+    had_error: bool,
 }
 
 impl Luxor {
@@ -31,7 +31,7 @@ impl Luxor {
         Default::default()
     }
 
-    fn run_file(&mut self, f: &str) -> Result<(), io::Error>  {
+    fn run_file(&mut self, f: &str) -> Result<(), io::Error> {
         let src = fs::read_to_string(f)?;
         self.run(&src);
         Ok(())
@@ -48,14 +48,12 @@ impl Luxor {
                 Ok(n) => {
                     if n == 0 {
                         // EOF
-                        return Ok(())
+                        return Ok(());
                     } else {
                         self.run(&input.trim());
                     };
                 }
-                Err(e) => {
-                    return Err(e)
-                }
+                Err(e) => return Err(e),
             }
 
             input.clear();
