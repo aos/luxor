@@ -1,6 +1,7 @@
 use std::io::{self, Write};
 use std::{fs, process};
 
+mod ast;
 mod scanner;
 mod token;
 
