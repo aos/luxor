@@ -2,6 +2,7 @@ use std::io::{self, Write};
 use std::{fs, process};
 
 mod ast;
+mod parser;
 mod scanner;
 mod token;
 

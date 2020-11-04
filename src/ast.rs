@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn test_pretty_print() {
-        let x = Expr::Binary {
+        let x = Box::new(Expr::Binary {
             left: Box::new(Expr::Unary {
                 operator: Token::new(TokenType::Minus, 1),
                 right: Box::new(Expr::Lit(Token::new(
@@ -54,7 +54,7 @@ mod tests {
                     1,
                 ))),
             }),
-        };
+        });
 
         assert_eq!(x.to_string(), "(* (- 123) (group 45.67))");
     }
